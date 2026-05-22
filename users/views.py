@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
+from team_finder.constants import SKILLS_AUTOCOMPLETE_LIMIT
 from team_finder.pagination import paginate
 from users.forms import (
     CustomPasswordChangeForm,
@@ -39,13 +40,11 @@ def register_view(request):
     form = RegistrationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
-        phone_suffix = 1000000000 + User.objects.count()
         User.objects.create_user(
             email=data["email"],
             password=data["password"],
             name=data["name"],
             surname=data["surname"],
-            phone=f"+7{phone_suffix}"[-12:],
         )
         return redirect("users:login")
     return render(request, "users/register.html", {"form": form})
@@ -78,7 +77,7 @@ def user_list_view(request):
         queryset = queryset.filter(skills__name=active_skill)
     page_obj, query_prefix = paginate(request, queryset.distinct())
     all_skills = list(
-        Skill.objects.order_by("name").values_list("name", flat=True).distinct()
+        Skill.objects.values_list("name", flat=True).distinct()
     )
     return render(
         request,
@@ -121,7 +120,7 @@ def change_password_view(request):
 @require_GET
 def skills_autocomplete_view(request):
     query = request.GET.get("q", "").strip()
-    skills = Skill.objects.filter(name__istartswith=query).order_by("name")[:10]
+    skills = Skill.objects.filter(name__istartswith=query).order_by("name")[:SKILLS_AUTOCOMPLETE_LIMIT]
     payload = [{"id": skill.id, "name": skill.name} for skill in skills]
     return JsonResponse(payload, safe=False)
 

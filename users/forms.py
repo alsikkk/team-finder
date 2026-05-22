@@ -13,12 +13,6 @@ class RegistrationForm(forms.Form):
     email = forms.EmailField(label="Email")
     password = forms.CharField(widget=forms.PasswordInput, label="Пароль")
 
-    def clean_email(self):
-        email = self.cleaned_data["email"].lower()
-        if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError("Пользователь с таким email уже существует.")
-        return email
-
 
 class LoginForm(forms.Form):
     email = forms.EmailField(label="Email")
@@ -47,14 +41,6 @@ class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ("name", "surname", "avatar", "about", "phone", "github_url")
-        labels = {
-            "name": "Имя",
-            "surname": "Фамилия",
-            "avatar": "Аватар",
-            "about": "О себе",
-            "phone": "Телефон",
-            "github_url": "GitHub",
-        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
